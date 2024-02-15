@@ -6,6 +6,6 @@ router_v1 = routers.DefaultRouter()
 
 urlpatterns = [
     # Создание и удаление токена.
-    url(r'^auth/', include('djoser.urls')),  # Работа с пользователями
+    url(r'^', include('djoser.urls')),  # Работа с пользователями
     url(r'^auth/', include('djoser.urls.authtoken')),  # Работа с токенами
 ]
