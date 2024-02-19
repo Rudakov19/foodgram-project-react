@@ -52,7 +52,7 @@ class Recipe(models.Model):
         through='RecipeTag'
     )
     image = models.ImageField(
-        'Картинка, закодированная в Base64',
+        'Картинка, закодированная в Base64'
     )
     name = models.CharField(
         'Название',
@@ -60,7 +60,7 @@ class Recipe(models.Model):
         unique=True
     )
     text = models.TextField(
-        'Описание',
+        'Описание'
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления (в минутах)'
@@ -99,3 +99,31 @@ class RecipeTag(models.Model):
 
     def __str__(self):
         return f'{self.tag.name} в {self.recipe.name}'
+
+
+class Favorite(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    def __str__(self):
+        return f'{self.user.username} добавил в избранное {self.recipe.name}'
+
+
+class ShoppingCart(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    def __str__(self):
+        return f'{self.user.username} добавил в покупки {self.recipe.name}'
