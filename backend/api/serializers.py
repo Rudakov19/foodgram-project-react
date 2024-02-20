@@ -100,7 +100,7 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         )
 
 
-class TagSerialiser(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     """Список тегов."""
 
     class Meta:
@@ -143,7 +143,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class RecipeReadSerializer(serializers.ModelSerializer):
     """Просмотр списка рецептов."""
 
-    tags = TagSerialiser(many=True)
+    tags = TagSerializer(many=True)
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(read_only=True, many=True,
                                              source='recipeingredient')
