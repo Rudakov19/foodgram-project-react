@@ -33,7 +33,6 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(
         'Единицы измерения',
         max_length=7,
-        unique=True
     )
 
     def __str__(self):

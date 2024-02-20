@@ -132,7 +132,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'],
             permission_classes=(permissions.IsAuthenticated, ),)
-    def download_shopping_cart(self, request, id):
+    def download_shopping_cart(self, request):
         ingredients_sum = (
             RecipeIngredient.objects
             .filter(recipe__shoppingcarts__user=request.user)
