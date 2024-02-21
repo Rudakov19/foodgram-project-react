@@ -14,7 +14,7 @@ services:
     restart: always
 
   backend:
-    image: rudakov19/foodgram_backend
+    build: ./backend/
     depends_on:
       - db
     env_file: .env
@@ -24,7 +24,7 @@ services:
     restart: always
 
   frontend:
-    image: rudakov19/foodgram_frontend
+    build: ./frontend/
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static
@@ -32,7 +32,7 @@ services:
         - backend
 
   gateway:
-    image: rudakov19/foodgram_gateway
+    build: ./nginx/
     env_file: .env
     ports:
       - 8800:80
