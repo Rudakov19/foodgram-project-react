@@ -1,10 +1,11 @@
 # Foodrgam
+[![Main Foodgram workflow](https://github.com/Rudakov19/foodgram-project-react/actions/workflows/main.yml/badge.svg)](https://github.com/Rudakov19/foodgram-project-react/actions/workflows/main.yml)
 Проект «Фудграм» — сайт, на котором пользователи могут публиковать рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов. Пользователям сайта также доступен сервис «Список покупок». Он позволит создавать список продуктов, которые нужно купить для приготовления выбранных блюд.
-[myfoodgram7811.zapto.org](https://myfoodgram7811.zapto.org)
-Superuser:
-email: ```dima@m.ru```
-login: ```dima```
-password: ```1111111g```
+##### [myfoodgram7811.zapto.org](https://myfoodgram7811.zapto.org)
+##### Superuser:
+ - email: `dima@m.ru`
+ - login: `dima`
+ - password: `1111111g`
 #### Технологии
  - Python 3.9
  - Django 3.2.3
