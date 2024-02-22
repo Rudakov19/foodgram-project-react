@@ -13,6 +13,6 @@ router_v1.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
     # Создание и удаление токена.
-    url(r'^', include('djoser.urls')),  # Работа с пользователями
+    url(r'^', include(router_v1.urls)),  # Работа с пользователями
     url(r'^auth/', include('djoser.urls.authtoken')),  # Работа с токенами
 ]

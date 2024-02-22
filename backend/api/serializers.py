@@ -118,13 +118,9 @@ class IngredientWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для записи ингредиентов в рецепт."""
 
     id = serializers.IntegerField()
-    amount = serializers.IntegerField()
-
-    def validate(self, data):
-        amount = data['amount']
-        if amount < MIN_MEANING or amount > MAX_MEANING:
-            raise serializers.ValidationError('Введите значение от 1 до 32000')
-        return data
+    amount = serializers.IntegerField(
+        max_value=MAX_MEANING, min_value=MIN_MEANING
+    )
 
     class Meta:
         model = RecipeIngredient
@@ -187,18 +183,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         many=True
     )
     image = Base64ImageField()
-    cooking_time = serializers.IntegerField()
+    cooking_time = serializers.IntegerField(
+        max_value=MAX_MEANING, min_value=MIN_MEANING
+    )
 
     def validate(self, obj):
         if Recipe.objects.filter(name=obj['name']).exists():
             raise serializers.ValidationError(
                 'Такой рецепт уже есть!')
         return obj
-
-    def validate_cooking_time(self, value):
-        if value < MIN_MEANING or value > MAX_MEANING:
-            raise serializers.ValidationError('Введите значение от 1 до 32000')
-        return value
 
     @transaction.atomic
     def create_ingredient(self, recipe, ingredients):
