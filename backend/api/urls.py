@@ -12,7 +12,6 @@ router_v1.register(r'tags', TagViewSet, basename='tags')
 router_v1.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
-    # Создание и удаление токена.
-    url(r'^', include(router_v1.urls)),  # Работа с пользователями
-    url(r'^auth/', include('djoser.urls.authtoken')),  # Работа с токенами
+    url('', include(router_v1.urls)),
+    url(r'^auth/', include('djoser.urls.authtoken')),
 ]
