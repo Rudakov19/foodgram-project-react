@@ -117,17 +117,17 @@ class SubscribeAuthorSerializer(serializers.ModelSerializer):
         return obj.recipes.count()
 
     class Meta:
-            model = User
-            fields = (
-                'email',
-                'id',
-                'username',
-                'first_name',
-                'last_name',
-                'is_subscribed',
-                'recipes',
-                'recipes_count'
-            )
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -211,6 +211,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
+    id = serializers.ReadOnlyField()
     ingredients = IngredientWriteSerializer(
         many=True
     )
@@ -218,12 +219,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(
         max_value=MAX_MEANING, min_value=MIN_MEANING
     )
-
-    def validate(self, obj):
-        if Recipe.objects.filter(name=obj['name']).exists():
-            raise serializers.ValidationError(
-                'Такой рецепт уже есть!')
-        return obj
 
     @transaction.atomic
     def create_ingredient(self, recipe, tags, ingredients):
@@ -255,7 +250,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time', instance.cooking_time)
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        self.create_ingredient(instance, ingredients)
         Recipe_ingredient.objects.filter(
             recipe=instance,
             ingredient__in=instance.ingredients.all()).delete()
@@ -266,7 +260,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return RecipeReadSerializer(
             instance,
-            context={'request': self.context.get('request')}
+            context=self.context
         ).data
 
     class Meta:
@@ -281,3 +275,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time'
         )
+        extra_kwargs = {
+            'ingredients': {'required': True, 'allow_blank': False},
+            'tags': {'required': True, 'allow_blank': False},
+            'name': {'required': True, 'allow_blank': False},
+            'text': {'required': True, 'allow_blank': False},
+            'image': {'required': True, 'allow_blank': False},
+            'cooking_time': {'required': True},
+        }

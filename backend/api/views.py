@@ -49,7 +49,7 @@ class UserViewSet(UserViewSet):
 
         if request.metod == 'POST':
             serializer = SubscribeAuthorSerializer(author, data=request.data,
-                                                 context=context)
+                                                   context=context)
             serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATE)
@@ -135,7 +135,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=(permissions.IsAuthenticated, ),)
     def download_shopping_cart(self, request):
-        ingredients_sum = (
+        ingredients = (
             Recipe_ingredient.objects
             .filter(recipe__shopping_recipe__user=request.user)
             .order_by('ingredient__name')
@@ -145,8 +145,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         shopping_list = []
         [shopping_list.append(
-            '{} - {} {}.'.format(*ingredient)) for ingredient in ingredients_sum]
+            '{} - {} {}.'.format(*ingredient)) for ingredient in ingredients]
         response = HttpResponse('Cписок покупок:\n' + '\n'.join(shopping_list),
-                            content_type='text/plain')
-        response['Content-Disposition'] = ('attachment; filename=shopping_list.txt')
+                                content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename=shopping_list.txt'
+        )
         return response

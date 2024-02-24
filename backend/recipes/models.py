@@ -78,7 +78,6 @@ class Recipe(models.Model):
     name = models.CharField(
         'Название',
         max_length=200,
-        unique=True
     )
     text = models.TextField(
         'Описание'
