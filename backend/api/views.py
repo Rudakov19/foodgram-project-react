@@ -6,13 +6,15 @@ from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from api.filters import RecipeFilter
 from api.pagination import CustomPagination
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (UserSerializer, UserCreateSerializer,
                              SubscriptionsSerializer, IngredientSerializer,
                              TagSerializer, RecipeReadSerializer,
-                             RecipeCreateSerializer, RecipeSerializer)
-from recipes.models import (Ingredient, Tag, Recipe, RecipeIngredient)
+                             RecipeCreateSerializer, RecipeSerializer,
+                             SubscribeAuthorSerializer)
+from recipes.models import (Ingredient, Tag, Recipe, Recipe_ingredient)
 from users.models import User, Subscribe
 
 
@@ -32,7 +34,7 @@ class UserViewSet(UserViewSet):
     def subscriptions(self, request):
         context = {'request': request}
         user = request.user
-        queryset = User.objects.filter(authors__user=user)
+        queryset = User.objects.filter(subscribing__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionsSerializer(pages, many=True,
                                              context=context)
@@ -46,7 +48,7 @@ class UserViewSet(UserViewSet):
         author = get_object_or_404(User, id=id)
 
         if request.metod == 'POST':
-            serializer = SubscriptionsSerializer(author, data=request.data,
+            serializer = SubscribeAuthorSerializer(author, data=request.data,
                                                  context=context)
             serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=user, author=author)
@@ -63,7 +65,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
     pagination_class = None
     filter_backends = (filters.SearchFilter, )
-    search_fields = ('name', )
+    search_fields = ('^name', )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -78,6 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly, )
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend, )
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -96,14 +99,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             serializer = RecipeSerializer(recipe, data=data, context=context)
             serializer.is_valid(raise_exception=True)
-            if not user.favorites.filter(recipe=recipe).exists():
-                user.favorites.create(recipe=recipe)
+            if not user.favorite_user.filter(recipe=recipe).exists():
+                user.favorite_user.create(recipe=recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
-            favorite = get_object_or_404(user.favorites, recipe=recipe)
+            favorite = get_object_or_404(user.favorite_user, recipe=recipe)
             favorite.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -118,14 +121,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             serializer = RecipeSerializer(recipe, data=data, context=context)
             serializer.is_valid(raise_exception=True)
-            if not user.shoppingcarts.filter(recipe=recipe).exists():
-                user.shoppingcarts.create(recipe=recipe)
+            if not user.shopping_user.filter(recipe=recipe).exists():
+                user.shopping_user.create(recipe=recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
-            shoppingcart = get_object_or_404(user.shoppingcarts, recipe=recipe)
+            shoppingcart = get_object_or_404(user.shopping_user, recipe=recipe)
             shoppingcart.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -133,23 +136,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated, ),)
     def download_shopping_cart(self, request):
         ingredients_sum = (
-            RecipeIngredient.objects
-            .filter(recipe__shoppingcarts__user=request.user)
+            Recipe_ingredient.objects
+            .filter(recipe__shopping_recipe__user=request.user)
             .order_by('ingredient__name')
-            .values('ingredient__name', 'ingredient__measurement_unit')
             .annotate(total_amount=Sum('amount'))
+            .values_list('ingredient__name', 'total_amount',
+                         'ingredient__measurement_unit')
         )
         shopping_list = []
-        for ingredient in ingredients_sum:
-            name = ingredient.get('ingredient__name')
-            amount = ingredient.get('amount')
-            unit = ingredient.get('ingredient__measurement_unit')
-            shopping_list.append(
-                f'{name} - {amount}({unit})\n'
-            )
-        response = HttpResponse('Корзина покупок:\n' + shopping_list,
-                                content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename=shopping_list.txt'
-        )
+        [shopping_list.append(
+            '{} - {} {}.'.format(*ingredient)) for ingredient in ingredients_sum]
+        response = HttpResponse('Cписок покупок:\n' + '\n'.join(shopping_list),
+                            content_type='text/plain')
+        response['Content-Disposition'] = ('attachment; filename=shopping_list.txt')
         return response
