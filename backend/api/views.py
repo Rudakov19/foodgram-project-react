@@ -1,8 +1,7 @@
 from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
-from rest_framework import permissions, status, viewsets, filters
+from rest_framework import permissions, mixins, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -18,7 +17,10 @@ from recipes.models import (Ingredient, Tag, Recipe, Recipe_ingredient)
 from users.models import User, Subscribe
 
 
-class UserViewSet(UserViewSet):
+class UserViewSet(mixins.CreateModelMixin,
+                  mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin,
+                  viewsets.GenericViewSet):
     queryset = User.objects.all()
     pagination_class = CustomPagination
     permission_classes = (permissions.AllowAny,)
@@ -27,6 +29,14 @@ class UserViewSet(UserViewSet):
         if self.action == 'list':
             return UserSerializer
         return UserCreateSerializer
+
+    @action(detail=False, methods=['get'],
+            pagination_class=None,
+            permission_classes=(permissions.IsAuthenticated,))
+    def me(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'],
             permission_classes=(permissions.IsAuthenticated,),

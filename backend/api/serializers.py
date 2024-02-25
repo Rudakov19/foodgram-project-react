@@ -12,7 +12,7 @@ from users.models import User, Subscribe
 class UserSerializer(UserSerializer):
     """Профиль пользователя."""
 
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
 
     def get_is_subscribed(self, obj):
         if (self.context.get('request')
