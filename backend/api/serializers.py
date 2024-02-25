@@ -5,7 +5,6 @@ from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import (Tag, Ingredient, Recipe, Recipe_ingredient,
-                            Favorite, Shopping_cart,
                             MIN_MEANING, MAX_MEANING)
 from users.models import User, Subscribe
 
@@ -68,12 +67,11 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField(read_only=True)
 
-    def get_is_subscribed(self, obj):
-        return (
-            self.context.get('request').user.is_authenticated
-            and Subscribe.objects.filter(user=self.context['request'].user,
-                                         author=obj).exists()
-        )
+    def get_is_subscribed(self, author):
+        request = self.context['request']
+        if request.user.is_anonymous:
+            return False
+        return author.subscribing.filter(user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -110,12 +108,11 @@ class SubscribeAuthorSerializer(serializers.ModelSerializer):
     recipes = RecipeSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
-    def get_is_subscribed(self, obj):
-        return (
-            self.context.get('request').user.is_authenticated
-            and Subscribe.objects.filter(user=self.context['request'].user,
-                                         author=obj).exists()
-        )
+    def get_is_subscribed(self, author):
+        request = self.context['request']
+        if request.user.is_anonymous:
+            return False
+        return author.subscribing.filter(user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -175,20 +172,17 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
 
-    def get_is_favorited(self, obj):
-        return (
-            self.context.get('request').user.is_authenticated
-            and Favorite.objects.filter(user=self.context['request'].user,
-                                        recipe=obj).exists()
-        )
+    def get_is_favorited(self, recipe):
+        request = self.context['request']
+        if request.user.is_anonymous:
+            return False
+        return recipe.favorite_recipe.filter(user=request.user).exists()
 
-    def get_is_in_shopping_cart(self, obj):
-        return (
-            self.context.get('request').user.is_authenticated
-            and Shopping_cart.objects.filter(
-                user=self.context['request'].user,
-                recipe=obj).exists()
-        )
+    def get_is_in_shopping_cart(self, recipe):
+        request = self.context['request']
+        if not request.user.is_authenticated:
+            return False
+        return recipe.shopping_recipe.filter(user=request.user).exists()
 
     class Meta:
         model = Recipe
